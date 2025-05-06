@@ -69,7 +69,7 @@ async function getItems(page, url) {
    */
   const browser = await puppeteer.launch({
     channel: 'chrome',
-    headless: false
+    // headless: false
   });
   const page = await browser.newPage();
   const res = [];
