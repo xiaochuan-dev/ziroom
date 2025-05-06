@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer-extra");
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
+const { isExist, insert } = require('./db');
 
 puppeteer.use(StealthPlugin());
 
@@ -82,4 +83,14 @@ async function getItems(page, url) {
   }
   
   await browser.close();
+
+  for (const item of res) {
+    if (!isExist(item.invNo)) {
+      console.log('----------------');
+      console.log(JSON.stringify(item));
+      console.log('----------------');
+      insert(item);
+    }
+  }
+
 })();
