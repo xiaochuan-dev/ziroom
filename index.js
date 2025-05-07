@@ -55,6 +55,9 @@ async function getItems(page, url) {
   const nextPageUrl = await page
     .$eval("a.next", (link) => link?.href)
     .catch(() => null);
+
+  console.log(items);
+
   return {
     items,
     nextPageUrl,
