@@ -1,6 +1,15 @@
 const puppeteer = require("puppeteer-extra");
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 const { isExist, insert } = require("./db");
+const Tesseract = require("tesseract.js");
+const fs = require("fs");
+const path = require("path");
+
+// 创建保存图片的目录
+const outputDir = "room_prices";
+if (!fs.existsSync(outputDir)) {
+  fs.mkdirSync(outputDir);
+}
 
 puppeteer.use(StealthPlugin());
 
@@ -11,46 +20,80 @@ async function getItems(page, url) {
   const itemElements = await page.$$(".Z_list-box .item[data-inv-no]");
   const items = [];
 
-  itemElements.forEach((item) => {
-    // 提取基本信息
-    const invNo = item.getAttribute("data-inv-no");
-    const bedroom = item.getAttribute("data-bedroom");
-    const houseType = item.getAttribute("data-house-type");
+  for (let i = 0; i < itemElements.length; i++) {
+    const item = itemElements[i];
 
-    // 提取标题
-    const titleElement = item.querySelector(".title");
-    const title = titleElement ? titleElement.textContent.trim() : "";
+    // 在浏览器环境中提取数据
+    const itemData = await page.evaluate((el) => {
+      const invNo = el.getAttribute("data-inv-no");
+      const bedroom = el.getAttribute("data-bedroom");
+      const houseType = el.getAttribute("data-house-type");
 
-    // 提取描述信息
-    const descElements = item.querySelectorAll(".desc > div");
-    const area = descElements[0] ? descElements[0].textContent.trim() : "";
-    const location = descElements[1] ? descElements[1].textContent.trim() : "";
+      const titleElement = el.querySelector(".title");
+      const title = titleElement ? titleElement.textContent.trim() : "";
 
-    // 提取标签
-    const tags = [];
-    const tagElements = item.querySelectorAll(".tag span");
-    tagElements.forEach((tag) => {
-      tags.push(tag.textContent.trim());
-    });
+      const descElements = el.querySelectorAll(".desc > div");
+      const area = descElements[0] ? descElements[0].textContent.trim() : "";
+      const location = descElements[1]
+        ? descElements[1].textContent.trim()
+        : "";
 
-    const imgElement = item.querySelector(".pic-wrap img");
-    const imgUrl = imgElement ? imgElement.getAttribute("src") : "";
+      const tags = [];
+      const tagElements = el.querySelectorAll(".tag span");
+      tagElements.forEach((tag) => {
+        tags.push(tag.textContent.trim());
+      });
 
-    const linkElement = item.querySelector(".pic-wrap");
-    const detailUrl = linkElement ? linkElement.getAttribute("href") : "";
+      const imgElement = el.querySelector(".pic-wrap img");
+      const imgUrl = imgElement ? imgElement.getAttribute("src") : "";
 
-    items.push({
-      invNo,
-      bedroom,
-      houseType,
-      title,
-      area,
-      location,
-      tags: tags.join(" "),
-      imgUrl,
-      detailUrl: detailUrl ? `https:${detailUrl}` : "",
-    });
-  });
+      const linkElement = el.querySelector(".pic-wrap");
+      const detailUrl = linkElement ? linkElement.getAttribute("href") : "";
+
+      return {
+        invNo,
+        bedroom,
+        houseType,
+        title,
+        area,
+        location,
+        tags: tags.join(" "),
+        imgUrl,
+        detailUrl: detailUrl ? `https:${detailUrl}` : "",
+      };
+    }, item);
+
+    const roomDir = path.join(outputDir, invNo);
+    if (!fs.existsSync(roomDir)) {
+      fs.mkdirSync(roomDir);
+    }
+    try {
+      const priceElement = await item.$(".price");
+      if (priceElement) {
+        const priceImagePath = path.join(roomDir, `price_${i}.png`);
+        await priceElement.screenshot({ path: priceImagePath });
+
+        console.log(`正在识别房源 ${invNo} 的价格...`);
+        const {
+          data: { text },
+        } = await Tesseract.recognize(
+          priceImagePath,
+          "eng", // 中文和英文
+          {
+            tessedit_char_whitelist: "0123456789", // 限制字符集提高识别率
+            tessedit_pageseg_mode: 7, // 单行文本模式
+          }
+        );
+
+        // 清理识别结果
+        const cleanedPrice = text.replace(/[^\d¥￥.]/g, "").trim();
+        itemData.price = cleanedPrice;
+      }
+    } catch (error) {
+      console.error(`处理房源 ${invNo} 时出错:`, error);
+    }
+    items.push(itemData);
+  }
 
   const nextPageUrl = await page
     .$eval("a.next", (link) => link?.href)
