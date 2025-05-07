@@ -34,7 +34,7 @@ function insert(item) {
   );
 }
 
-function getCurPriceAndUpdateAtAndChanges(invNo) {
+function getCurPriceAndUpdateAt(invNo) {
   const query = database.prepare(
     "SELECT price, update_at, changes FROM rooms WHERE invNo=?"
   );
