@@ -17,6 +17,13 @@ async function getItems(page, url) {
   await page.goto(url);
   await page.waitForSelector(".Z_list-box");
 
+  await page.evaluate(() => {
+    const elementsToRemove = document.querySelectorAll(".unit, .rmb");
+    elementsToRemove.forEach((element) => {
+      element.remove();
+    });
+  });
+
   const itemElements = await page.$$(".Z_list-box .item[data-inv-no]");
   const items = [];
 
@@ -63,7 +70,7 @@ async function getItems(page, url) {
       };
     }, item);
 
-    const invNo = await item.evaluate(el => el.getAttribute('data-inv-no'));
+    const invNo = await item.evaluate((el) => el.getAttribute("data-inv-no"));
     const roomDir = path.join(outputDir, invNo);
     if (!fs.existsSync(roomDir)) {
       fs.mkdirSync(roomDir);
@@ -73,8 +80,6 @@ async function getItems(page, url) {
       if (priceElement) {
         const priceImagePath = path.join(roomDir, `price_${i}.png`);
         await priceElement.screenshot({ path: priceImagePath });
-
-        console.log(`正在识别房源 ${invNo} 的价格...`);
         const {
           data: { text },
         } = await Tesseract.recognize(
