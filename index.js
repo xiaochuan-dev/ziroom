@@ -63,6 +63,7 @@ async function getItems(page, url) {
       };
     }, item);
 
+    const invNo = await item.evaluate(el => el.getAttribute('data-inv-no'));
     const roomDir = path.join(outputDir, invNo);
     if (!fs.existsSync(roomDir)) {
       fs.mkdirSync(roomDir);
