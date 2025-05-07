@@ -17,8 +17,8 @@ function isExist(invNo) {
 
 function insert(item) {
   const insert = database.prepare(`INSERT INTO rooms (
-    invNo, bedroom, houseType, title, area, location, tags, imgUrl, detailUrl, created_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    invNo, bedroom, houseType, title, area, location, tags, imgUrl, detailUrl, created_at, price
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
   insert.run(
     item.invNo, // 房源编号 (TEXT)
     item.bedroom, // 卧室数量 (TEXT)
@@ -29,7 +29,8 @@ function insert(item) {
     item.tags, // 标签 (TEXT)
     item.imgUrl, // 图片URL (TEXT)
     item.detailUrl, // 详情页URL (TEXT)
-    getBeijingTime()
+    getBeijingTime(),
+    item.price
   );
 }
 
