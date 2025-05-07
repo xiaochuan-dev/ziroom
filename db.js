@@ -17,7 +17,7 @@ function isExist(invNo) {
 
 function insert(item) {
   const insert = database.prepare(`INSERT INTO rooms (
-    invNo, bedroom, houseType, title, area, location, tags, imgUrl, detailUrl, created_at, price
+    invNo, bedroom, houseType, title, area, location, tags, imgUrl, detailUrl, update_at, price
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
   insert.run(
     item.invNo, // 房源编号 (TEXT)
@@ -34,7 +34,25 @@ function insert(item) {
   );
 }
 
+function getCurPriceAndUpdateAtAndChanges(invNo) {
+  const query = database.prepare(
+    "SELECT price, update_at, changes FROM rooms WHERE invNo=?"
+  );
+  const res = query.get(invNo);
+  return res;
+}
+
+function update({ invNo, update_at, changes, newPrice }) {
+  const updateQuery = database.prepare(
+    "UPDATE rooms SET price=?, update_at=?, changes=? WHERE invNo=?"
+  );
+  updateQuery.run(newPrice, update_at, changes, invNo);
+}
+
 module.exports = {
+  getBeijingTime,
   isExist,
   insert,
+  update,
+  getCurPriceAndUpdateAt
 };

@@ -1,6 +1,12 @@
 const puppeteer = require("puppeteer-extra");
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
-const { isExist, insert } = require("./db");
+const {
+  isExist,
+  insert,
+  update,
+  getCurPriceAndUpdateAt,
+  getBeijingTime,
+} = require("./db");
 const Tesseract = require("tesseract.js");
 const fs = require("fs");
 const path = require("path");
@@ -135,10 +141,23 @@ async function getItems(page, url) {
 
   for (const item of res) {
     if (!isExist(item.invNo)) {
-      console.log("----------------");
+      console.log("新上线----------------");
       console.log(JSON.stringify(item));
-      console.log("----------------");
       insert(item);
+    } else {
+      const { price, update_at, changes } = getCurPriceAndUpdateAt(item.invNo);
+      if (price !== item.price) {
+        const newUpdateAt = getBeijingTime();
+        const newChanges = `${changes ?? ""}
+        ${update_at}    ${item.price}`;
+        update({
+          invNo: item.invNo,
+          newPrice: item.price,
+          update_at: newUpdateAt,
+          changes: newChanges,
+        });
+        console.log(`${item.invNo}  价格更新 ${item.price}`);
+      }
     }
   }
 })();
