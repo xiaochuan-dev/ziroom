@@ -149,7 +149,7 @@ async function getItems(page, url) {
       if (price !== item.price) {
         const newUpdateAt = getBeijingTime();
         const newChanges = `${changes ?? ""}
-        ${update_at}    ${item.price}`;
+        ${update_at}    ${price}`;
         update({
           invNo: item.invNo,
           newPrice: item.price,
