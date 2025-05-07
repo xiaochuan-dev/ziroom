@@ -146,7 +146,7 @@ async function getItems(page, url) {
       insert(item);
     } else {
       const { price, update_at, changes } = getCurPriceAndUpdateAt(item.invNo);
-      if (price !== item.price) {
+      if (price !== item.price && !!item.price) {
         const newUpdateAt = getBeijingTime();
         const newChanges = `${changes ?? ""}
         ${update_at}    ${price}`;
