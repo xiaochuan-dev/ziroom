@@ -49,10 +49,25 @@ function update({ invNo, update_at, changes, newPrice }) {
   updateQuery.run(newPrice, update_at, changes, invNo);
 }
 
+function getAll() {
+  const query = database.prepare("SELECT * FROM rooms");
+
+  const res = query.all();
+  return res;
+}
+
+function deleteFromDb(invNo) {
+  const query = database.prepare("DELETE FROM rooms WHERE invNo=?;");
+  const res = query.run(invNo);
+}
+
+
 module.exports = {
   getBeijingTime,
   isExist,
   insert,
   update,
-  getCurPriceAndUpdateAt
+  getCurPriceAndUpdateAt,
+  getAll,
+  deleteFromDb
 };

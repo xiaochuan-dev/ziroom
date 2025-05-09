@@ -6,6 +6,8 @@ const {
   update,
   getCurPriceAndUpdateAt,
   getBeijingTime,
+  getAll,
+  deleteFromDb
 } = require("./db");
 const Tesseract = require("tesseract.js");
 const fs = require("fs");
@@ -158,6 +160,15 @@ async function getItems(page, url) {
         });
         console.log(`${item.invNo}  价格更新 ${item.price}`);
       }
+    }
+  }
+
+  const dbItemList = getAll();
+  for (const item of dbItemList) {
+    const resItem = res.find(({ invNo }) => invNo === item.invNo);
+
+    if (!resItem) {
+      deleteFromDb(item.invNo)
     }
   }
 })();
