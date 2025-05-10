@@ -57,8 +57,9 @@ function getAll() {
 }
 
 function deleteFromDb(invNo) {
-  const query = database.prepare("DELETE FROM rooms WHERE invNo=?;");
+  const query = database.prepare("DELETE FROM rooms WHERE invNo=?");
   const res = query.run(invNo);
+  return res.changes > 0;
 }
 
 
