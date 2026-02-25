@@ -22,8 +22,29 @@ if (!fs.existsSync(outputDir)) {
 puppeteer.use(StealthPlugin());
 
 async function getItems(page, url) {
-  await page.goto(url);
-  await page.waitForSelector(".Z_list-box");
+
+  try {
+    await page.goto(url);
+    await page.waitForSelector(".Z_list-box");
+  } catch(err) {
+    console.log(`页面加载或选择器等待超时: ${url}`);
+    
+    // 截图保存当前页面状态
+    const timestamp = new Date().getTime();
+    const screenshotPath = path.join(__dirname, `error-${timestamp}.png`);
+    await page.screenshot({ 
+      path: screenshotPath,
+      fullPage: true // 截取整个页面
+    });
+    console.log(`错误页面截图已保存: ${screenshotPath}`);
+    
+    // 也可以保存页面HTML用于调试
+    const htmlPath = path.join(__dirname, `error-${timestamp}.html`);
+    const html = await page.content();
+    fs.writeFileSync(htmlPath, html);
+    console.log(`错误页面HTML已保存: ${htmlPath}`);
+  
+  }
 
   await page.evaluate(() => {
     const elementsToRemove = document.querySelectorAll(".unit, .rmb");

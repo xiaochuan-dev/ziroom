@@ -18,6 +18,12 @@ jobs:
           node-version: '24.x'
       - run: yarn
       - run: node index.js
+      - name: Create png
+        uses: actions/upload-artifact@v5
+        with:
+          name: png
+          path: *.png
+          retention-days: 2
       - run: echo "新行" >> README.md
       - name: commit
         run: |
